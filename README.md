@@ -26,7 +26,7 @@ jobs:
     if: github.event.deployment_status.state == 'success'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: lintpage/action@v1
         with:
           api-key: ${{ secrets.LINTPAGE_API_KEY }} # optional
@@ -42,7 +42,7 @@ jobs:
   lintpage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: lintpage/action@v1
         with:
           urls: 'https://staging.myapp.com https://staging.myapp.com/pricing'
@@ -58,7 +58,7 @@ jobs:
   lintpage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: npm ci
       - run: npm run build
       - run: npm start &
