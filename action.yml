@@ -1,0 +1,60 @@
+name: 'LintPage SEO Check'
+description: 'Catch SEO issues on preview deployments before they reach production'
+branding:
+  icon: 'search'
+  color: 'blue'
+
+inputs:
+  urls:
+    description: 'Space-separated URLs to audit'
+    required: false
+  config:
+    description: 'Path to LintPage config file'
+    required: false
+  fail-on-warning:
+    description: 'Fail the check on warnings (not just errors)'
+    required: false
+    default: 'false'
+  api-key:
+    description: 'LintPage API key for dashboard reporting'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install LintPage
+      shell: bash
+      run: npm install -g lintpage@latest
+
+    - name: Determine URLs
+      id: urls
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.urls }}" ]; then
+          echo "target=${{ inputs.urls }}" >> $GITHUB_OUTPUT
+        elif [ -n "${{ github.event.deployment_status.target_url }}" ]; then
+          echo "target=${{ github.event.deployment_status.target_url }}" >> $GITHUB_OUTPUT
+        else
+          echo "target=" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Run LintPage
+      shell: bash
+      env:
+        LINTPAGE_API_KEY: ${{ inputs.api-key }}
+      run: |
+        ARGS="--format github"
+        if [ "${{ inputs.fail-on-warning }}" = "true" ]; then
+          ARGS="$ARGS --fail-on-warning"
+        fi
+        if [ -n "${{ inputs.config }}" ]; then
+          ARGS="$ARGS --config ${{ inputs.config }}"
+        fi
+        if [ -n "$LINTPAGE_API_KEY" ]; then
+          ARGS="$ARGS --report"
+        fi
+        if [ -n "${{ steps.urls.outputs.target }}" ]; then
+          lintpage ${{ steps.urls.outputs.target }} $ARGS
+        else
+          lintpage $ARGS
+        fi
